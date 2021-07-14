@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 // for in app routing (single page application)
 import {
@@ -6,6 +6,7 @@ import {
   Route,
   Redirect,
   Switch,
+  //   useParams,
 } from "react-router-dom";
 
 // Styled components
@@ -49,9 +50,11 @@ const App: React.FC = () => {
     setRedirectPath: "/",
   };
 
+  useEffect(() => {}, []);
+
   const Default = () => {
     return (
-      <Router>
+      <Router basename="/mailservice">
         <Switch>
           <Route
             {...defaultProtectedRouteProps}
@@ -68,7 +71,7 @@ const App: React.FC = () => {
   const Dashboard = () => {
     return (
       <AppContainer>
-        <Router>
+        <Router basename="/mailservice">
           <Navbar />
           <AppInnerContainer>
             <Scrollbar height="100%">

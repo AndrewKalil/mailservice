@@ -9,7 +9,7 @@ import {
 } from "./MainPageStyles";
 
 // components to import
-import Tab1 from "../../components/MainPageComponents/ServidoresDeCorreo/ServidoresDeCorreo";
+import Tab1 from "../../components/MainPageComponents/ServidoresDeCorreo";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserDetails, user } from "../../store/modules/UserStore";
 import { getClientSettings } from "../../store/modules/EmailStore";

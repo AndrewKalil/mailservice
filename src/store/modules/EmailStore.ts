@@ -4,14 +4,27 @@ import API from "../../services/API";
 import { TokenService } from "../../services/LocalStorage";
 import AWSAPI from "../../services/AWSAPI";
 
-// interface ServerType {
-//   label: string;
-//   value: object;
-// }
+interface ServerValue {
+  text: string;
+  server: string;
+  port: number;
+}
+
+interface ServerType {
+  label: string;
+  value: ServerValue;
+}
 
 interface SelectType {
   label: string;
   value: string;
+}
+
+interface LogsType {
+  type: string;
+  logMessage: string;
+  data: string;
+  username: string;
 }
 
 interface ClientSettings {
@@ -23,19 +36,21 @@ interface ClientSettings {
 }
 
 interface Reglas {
-  id: string;
-  hasKeywords: string;
+  id: number;
+  hasKeywords: boolean;
   keywords: Array<string>[];
-  requestType: string;
-  nature: string;
-  area: string;
-  service: string;
+  type?: string;
+  ruleId: number;
+  natureId?: number;
+  areaId?: number;
+  serviceId?: number;
+  recentlyCreated?: boolean;
 }
 
 interface EmailsListTypes {
   id: number;
   emailText: string;
-  tipoDeServidor?: SelectType;
+  tipoDeServidor?: ServerType;
   password?: string;
   port?: boolean;
   portNumber?: number;
@@ -43,16 +58,25 @@ interface EmailsListTypes {
   recentlyCreated?: boolean;
 }
 
+interface LoadingTypes {
+  loadingRules: boolean;
+  loadingInboxes: boolean;
+  loadingNatures: boolean;
+  loadingAreas: boolean;
+}
+
 interface EmailState {
   emails: number;
   emailsList: EmailsListTypes[];
   tooManyEmailsAlert: boolean;
-  serversList: SelectType[];
+  serversList: ServerType[];
   areas: SelectType[];
   natures: SelectType[];
   services: SelectType[];
   clientSettings: ClientSettings;
   reglas: Reglas[];
+  loading: LoadingTypes;
+  logs: LogsType[];
 }
 
 const initialState: EmailState = {
@@ -60,11 +84,23 @@ const initialState: EmailState = {
   emailsList: [],
   tooManyEmailsAlert: false,
   serversList: [
-    { label: "Gmail", value: "GMAIL" },
-    { label: "Outlook", value: "OUTLOOK" },
-    { label: "Office365", value: "OFFICE365" },
-    { label: "Zoho Mail", value: "ZOHO" },
-    { label: "Otro", value: "OTRO" },
+    {
+      label: "Gmail",
+      value: { text: "GMAIL", server: "imap.gmail.com", port: 993 },
+    },
+    {
+      label: "Outlook",
+      value: { text: "OUTLOOK", server: "outlook.office365.com", port: 993 },
+    },
+    {
+      label: "Office365",
+      value: { text: "OFFICE365", server: "outlook.office365.com", port: 993 },
+    },
+    {
+      label: "Zoho Mail",
+      value: { text: "ZOHO", server: "imappro.zoho.com", port: 993 },
+    },
+    { label: "Otro", value: { text: "OTRO", server: "", port: 557 } },
   ],
   areas: [],
   natures: [],
@@ -77,6 +113,13 @@ const initialState: EmailState = {
     maxInboxLength: 0,
   },
   reglas: [],
+  loading: {
+    loadingInboxes: false,
+    loadingRules: false,
+    loadingNatures: false,
+    loadingAreas: false,
+  },
+  logs: [],
 };
 
 export const EmailStore = createSlice({
@@ -119,14 +162,35 @@ export const EmailStore = createSlice({
     setServices: (state, action: PayloadAction<SelectType[]>) => {
       state.services = action.payload;
     },
-    setAddRules: (state, action: PayloadAction<EmailsListTypes[]>) => {
-      state.emailsList = action.payload;
+    setAddRules: (state, action: PayloadAction<Reglas>) => {
+      state.reglas = [...state.reglas, action.payload];
     },
     setClientSettings: (state, action: PayloadAction<ClientSettings>) => {
       state.clientSettings = action.payload;
     },
     setRules: (state, action: PayloadAction<Reglas[]>) => {
       state.reglas = action.payload;
+    },
+    setRulesLoader: (state, action: PayloadAction<boolean>) => {
+      state.loading = { ...state.loading, loadingRules: action.payload };
+    },
+    setInboxesLoader: (state, action: PayloadAction<boolean>) => {
+      state.loading = { ...state.loading, loadingInboxes: action.payload };
+    },
+    setNaturesLoader: (state, action: PayloadAction<boolean>) => {
+      state.loading = { ...state.loading, loadingRules: action.payload };
+    },
+    setAreasLoader: (state, action: PayloadAction<boolean>) => {
+      state.loading = { ...state.loading, loadingInboxes: action.payload };
+    },
+    setLogs: (state, action: PayloadAction<LogsType[]>) => {
+      state.logs = action.payload;
+    },
+    setNewRule: (state, action: PayloadAction<Reglas[]>) => {
+      state.reglas = action.payload;
+    },
+    setFilteredRules: (state, action: PayloadAction<number>) => {
+      state.reglas = state.reglas.filter((item) => item.id !== action.payload);
     },
   },
 });
@@ -140,7 +204,7 @@ export const addEmailTemplate = () => (dispatch: any) => {
   const newEmailTemplate: EmailsListTypes = {
     id: 60065,
     emailText: "",
-    tipoDeServidor: { label: "", value: "" },
+    tipoDeServidor: { label: "", value: { text: "", server: "", port: 557 } },
     password: "",
     port: false,
     portNumber: undefined,
@@ -148,6 +212,18 @@ export const addEmailTemplate = () => (dispatch: any) => {
     recentlyCreated: true,
   };
   dispatch(setNewInbox(newEmailTemplate));
+};
+
+export const addRuleTempplate = (id: number) => (dispatch: any) => {
+  const newRuleTemplate: Reglas = {
+    id: 10000,
+    hasKeywords: false,
+    keywords: [],
+    type: "COMPLETA",
+    ruleId: 1,
+    recentlyCreated: true,
+  };
+  dispatch(setAddRules(newRuleTemplate));
 };
 
 /*
@@ -166,40 +242,6 @@ export const editEmailFields =
   };
 
 /*
-This function deletes an email
-*/
-// export const DeleteEmail = (Id: string) => (dispatch: any) => {
-//   dispatch(setDeleteEmail(Id));
-// };
-
-/*
-This function adds a rule to an email
-*/
-// export const addRule =
-//   (id: string, emailList: EmailsListTypes[]) => (dispatch: any) => {
-//     const indexToModify = emailList.indexOf(
-//       emailList.filter((item) => item.id === id)[0]
-//     );
-//     let emails = [...emailList];
-//     const newId = emails[indexToModify].reglas.length + 1;
-//     let newRules = [...emails[indexToModify].reglas];
-//     newRules = [
-//       ...newRules,
-//       {
-//         id: newId.toString(),
-//         hasKeywords: "",
-//         keywords: "",
-//         requestType: "",
-//         nature: "",
-//         area: "",
-//         service: "",
-//       },
-//     ];
-//     emails[indexToModify] = { ...emails[indexToModify], reglas: newRules };
-//     dispatch(setAddRules(emails));
-//   };
-
-/*
 This function gets the natures
 */
 export const getNatures = () => (dispatch: any) => {
@@ -212,7 +254,6 @@ export const getNatures = () => (dispatch: any) => {
           return { label: item.Text, value: item.Value };
         });
         dispatch(setNatures(naturesToDispatch));
-        // console.log(areasToDispatch);
       })
       .catch((e) => console.log(e));
   } catch (error) {
@@ -241,14 +282,14 @@ export const getAreas = () => (dispatch: any) => {
 };
 
 /*
-This function gets theservice
+This function gets the service
 */
 export const getServices = (areaID?: string) => (dispatch: any) => {
   try {
     API()
       .get(
         `/services/getservices?token=${TokenService.get()}${
-          areaID !== "" ? `&areaid=${areaID}` : ``
+          areaID && areaID !== "" ? `&areaid=${areaID}` : ``
         }`
       )
       .then((res) => {
@@ -265,6 +306,10 @@ export const getServices = (areaID?: string) => (dispatch: any) => {
 };
 
 // AWS API CALLS
+
+/*
+This function gets Client information which provides key values to make other API calls
+*/
 export const getClientSettings =
   (username: string) => async (dispatch: any) => {
     try {
@@ -291,9 +336,13 @@ export const getClientSettings =
     }
   };
 
+/*
+This function gets all inboxes created by the user
+*/
 export const getInboxesByClientId =
   (clientID: number) => async (dispatch: any) => {
     try {
+      dispatch(setInboxesLoader(true));
       AWSAPI()
         .post(``, {
           operation: "GetInboxesByClientId",
@@ -316,7 +365,11 @@ export const getInboxesByClientId =
                   .split(" ")
                   .map(capitalize)
                   .join(" "),
-                value: inbox.serverType,
+                value: {
+                  text: inbox.serverType,
+                  server: inbox.server,
+                  port: inbox.port,
+                },
               },
               password: inbox.password,
               otherRoute: inbox.server,
@@ -325,43 +378,63 @@ export const getInboxesByClientId =
             };
           });
           dispatch(setEmailsList(emailList));
+          dispatch(setInboxesLoader(false));
           // console.log(emailList);
         });
     } catch (error) {
       console.log(error);
+      dispatch(setInboxesLoader(false));
     }
   };
 
-export const getRulesByInboxId = (inboxID: number) => async (dispatch: any) => {
-  try {
-    AWSAPI()
-      .post(``, {
-        operation: "GetRulesByInboxId",
-        payload: {
-          inboxId: inboxID,
-        },
-      })
-      .then((res) => {
-        let rules: Reglas[] = [];
-        rules = res.data.data.map((rule: any) => {
-          return {
-            id: rule.id,
-            hasKeywords: rule.hasKeywords,
-            keywords: rule.keywords,
-            requestType: rule.type,
-            nature: rule.natureId,
-            area: rule.areaId,
-            service: rule.serviceId,
-          };
-        });
-        dispatch(setRules(rules));
-        // console.log(rules);
-      });
-  } catch (error) {
-    console.log(error);
-  }
-};
+/*
+This function gets all of the rules for a specific inbox
+*/
+export const getRulesByInboxId =
+  (
+    inboxID: number,
+    natures: SelectType[],
+    areas: SelectType[],
+    services: SelectType[]
+  ) =>
+  async (dispatch: any) => {
+    try {
+      dispatch(setRulesLoader(true));
+      AWSAPI()
+        .post(``, {
+          operation: "GetRulesByInboxId",
+          payload: {
+            inboxId: inboxID,
+          },
+        })
+        .then((res) => {
+          let rules: Reglas[] = [];
+          rules = res.data.data.map((rule: any) => {
+            return {
+              id: rule.id,
+              hasKeywords: rule.hasKeywords,
+              keywords: rule.keywords,
+              type: rule.type,
+              ruleId: rule.ruleId,
+              areaId: rule.areaId,
+              serviceId: rule.serviceId,
+              natureId: rule.natureId,
+            };
+          });
 
+          dispatch(setRules(rules));
+          dispatch(setRulesLoader(false));
+          //   console.log(rules);
+        });
+    } catch (error) {
+      console.log(error);
+      dispatch(setRulesLoader(false));
+    }
+  };
+
+/*
+This function gets all of the logs created by the user
+*/
 export const getLogsByClientId =
   (clientId?: number) => async (dispatch: any) => {
     try {
@@ -373,40 +446,67 @@ export const getLogsByClientId =
           },
         })
         .then((res) => {
-          // let logs: Logs[] = [];
-          // logs = res.data.data.map((rule: any) => {
-          //   return {
-          //     id: rule.id,
-          //     hasKeywords: rule.hasKeywords,
-          //     keywords: rule.keywords,
-          //     requestType: rule.type,
-          //     nature: rule.natureId,
-          //     area: rule.areaId,
-          //     service: rule.serviceId,
-          //   };
-          // });
-          // dispatch(setRules(rules));
-          console.log(res.data);
+          let logs: LogsType[] = res.data.data.Items.map((log: any) => {
+            return {
+              type: log.type,
+              logMessage: log.logMessage,
+              date: log.date,
+              username: log.inboxUsername,
+            };
+          });
+          //   console.log(logs);
+          dispatch(setLogs(logs));
         });
     } catch (error) {
       console.log(error);
     }
   };
 
+/*
+This function creates a new inbox by first being validated by imap
+*/
 export const createInbox =
-  (temporaryInboxId: number, newInbox: any) => async (dispatch: any) => {
+  (temporaryInboxId: number, newInbox: any, clientID: number) =>
+  async (dispatch: any) => {
     try {
-      if (newInbox.username === "" || newInbox.password !== "") {
+      const validation = await AWSAPI()
+        .post(``, {
+          operation: "ValidateIMAPCredentials",
+          payload: {
+            username: newInbox.username,
+            password: newInbox.password,
+            server: newInbox.server,
+            port: newInbox.port,
+          },
+        })
+        .then((res) => {
+          return res.data;
+          //   return true;
+        });
+      //   console.log(validation.data.successfulConnection);
+      if (validation === true) {
         AWSAPI()
           .post(``, {
             operation: "CreateInbox",
-            payload: newInbox,
+            payload: {
+              clientId: clientID,
+              username: newInbox.username,
+              password: newInbox.password,
+              server: newInbox.serverType.value.server,
+              port: newInbox.port ? 993 : 557,
+              serverType: newInbox.serverType.value.text,
+            },
           })
           .then((res) => {
             console.log(res.data.data.createdInboxId);
             let replaceObject = {
-              ...newInbox,
               id: res.data.data.createdInboxId,
+              emailText: newInbox.username,
+              password: newInbox.password,
+              port: newInbox.port,
+              portNumber: newInbox.port ? 993 : 557,
+              tipoDeServidor: newInbox.serverType,
+              otherRoute: newInbox.server,
             };
             dispatch(
               setReplaceInbox({
@@ -416,12 +516,163 @@ export const createInbox =
             );
           });
       } else {
-        console.log("Necesitas llenar todos los campos");
+        alert("Credenciales imap incorrectas\nPrueba con otros credenciales");
       }
     } catch (error) {
       console.log(error);
     }
   };
+
+/*
+This function deletes an inbox from the database
+*/
+export const deleteInbox =
+  (inboxId: number, emails: EmailsListTypes[]) => async (dispatch: any) => {
+    try {
+      AWSAPI()
+        .post(``, {
+          operation: "DeleteInbox",
+          payload: {
+            inboxId: inboxId,
+          },
+        })
+        .then((res) => {
+          const newEmailList = emails.filter((item) => item.id !== inboxId);
+          if (res.data.data.deleted) {
+            dispatch(setEmailsList(newEmailList));
+          }
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+/*
+This function edits an inbox
+*/
+export const editInbox =
+  (emailToEdit: EmailsListTypes, clientId: number, emails: EmailsListTypes[]) =>
+  async (dispatch: any) => {
+    try {
+      AWSAPI()
+        .post(``, {
+          operation: "EditInbox",
+          payload: {
+            id: emailToEdit.id,
+            clientId: clientId,
+            username: emailToEdit.emailText,
+            password: emailToEdit.password,
+            server: emailToEdit.otherRoute,
+            port: emailToEdit.portNumber,
+            serverType: emailToEdit.tipoDeServidor?.value.text,
+          },
+        })
+        .then((res) => {
+          if (res.data.data.edited === true) {
+            dispatch(
+              setReplaceInbox({
+                replaceObject: emailToEdit,
+                idToReplace: emailToEdit.id,
+              })
+            );
+          }
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+export const saveRule =
+  (payloadArg: any, recentlyCreated: boolean, rules: Reglas[]) =>
+  (dispatch: any) => {
+    if (recentlyCreated) {
+      try {
+        AWSAPI()
+          .post(``, {
+            operation: "CreateInboxRule",
+            payload: { ...payloadArg },
+          })
+          .then((res) => {
+            let ruleToReplace = {
+              id: res.data.data.createdInboxRuleId,
+              hasKeywords: payloadArg.hasKeywords,
+              keywords: payloadArg.keywords,
+              type: payloadArg.type,
+              natureId: payloadArg.natureId,
+              areaId: payloadArg.areaId,
+              serviceId: payloadArg.serviceId,
+              ruleId: payloadArg.ruleId,
+            };
+
+            const indexToReplace = rules.indexOf(
+              rules.filter((item) => item.id === payloadArg.id)[0]
+            );
+
+            let tempList = [...rules];
+            tempList[indexToReplace] = ruleToReplace;
+
+            dispatch(setNewRule(tempList));
+
+            // console.log(tempList);
+          });
+      } catch (error) {
+        console.log(error);
+      }
+    } else if (!recentlyCreated) {
+      try {
+        AWSAPI()
+          .post(``, {
+            operation: "EditInboxRule",
+            payload: { ...payloadArg },
+          })
+          .then((res) => {
+            if (res.data.data.edited) {
+              let ruleToReplace = {
+                id: payloadArg.id,
+                hasKeywords: payloadArg.hasKeywords,
+                keywords: payloadArg.keywords,
+                type: payloadArg.type,
+                natureId: payloadArg.natureId,
+                areaId: payloadArg.areaId,
+                serviceId: payloadArg.serviceId,
+                ruleId: payloadArg.ruleId,
+              };
+
+              const indexToReplace = rules.indexOf(
+                rules.filter((item) => item.id === payloadArg.id)[0]
+              );
+
+              let tempList = [...rules];
+              tempList[indexToReplace] = ruleToReplace;
+
+              dispatch(setNewRule(tempList));
+            } else {
+              console.log(res.data);
+            }
+          });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+export const deleteRule = (ruleId: number) => (dispatch: any) => {
+  try {
+    AWSAPI()
+      .post(``, {
+        operation: "DeleteInboxRule",
+        payload: { inboxRuleId: ruleId },
+      })
+      .then((res) => {
+        if (res.data.data.deleted) {
+          dispatch(setFilteredRules(ruleId));
+        }
+        console.log(res.data);
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const {
   setEmailsCount,
@@ -437,6 +688,13 @@ export const {
   setServices,
   setAddRules,
   setClientSettings,
+  setRulesLoader,
+  setInboxesLoader,
+  setNaturesLoader,
+  setAreasLoader,
+  setLogs,
+  setNewRule,
+  setFilteredRules,
 } = EmailStore.actions;
 export const email = (state: RootState) => state.email;
 export default EmailStore.reducer;

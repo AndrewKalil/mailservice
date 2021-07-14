@@ -57,6 +57,9 @@ export const OptionsContainer = styled.div`
   align-items: flex-start;
   padding: 10px;
   gap: 15px;
+  position: ${(props) => props.absolute && "absolute"};
+  top: ${(props) => props.absolute && "0"};
+  left: ${(props) => props.absolute && "5px"};
 `;
 
 export const OptionButton = styled.button`
@@ -130,6 +133,10 @@ export const ContentContainer = styled.div`
   padding-top: 1%;
   padding-left: 5%;
   padding-right: 5%;
+  display: ${(props) => props.spaceBetween && "flex"};
+  justify-content: ${(props) => props.spaceBetween && "space-between"};
+  align-items: ${(props) => props.spaceBetween && "center"};
+  flex-direction: ${(props) => props.spaceBetween && "column"};
 `;
 
 export const ContentWrapper = styled.div`
@@ -204,6 +211,7 @@ export const ReglaContainer = styled.div`
   flex-direction: column;
   padding: 2rem 6rem 2rem 6rem;
   justify-content: space-between;
+  position: relative;
 `;
 
 export const ReglasInputField = styled.div`
