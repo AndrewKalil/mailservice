@@ -185,7 +185,7 @@ export const NewEmail = (props) => {
               Cancelar
             </ModalButtons>
             <ModalButtons
-              bg="#a72323"
+              bg="#f1c40f"
               onClick={() => {
                 if (id > 60000) {
                   const newEmailList = emailState.emailsList.filter(

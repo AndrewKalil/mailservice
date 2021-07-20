@@ -110,7 +110,7 @@ export const checkToken = (token: any) => async (dispatch: any) => {
         let data = response.data;
         if (data.Status === "Ok") {
           dispatch(setTokenChecked(true));
-        } else {
+        } else if (token && data.Status !== "Ok") {
           dispatch(setAlert({ isOpen: true, content: "Token no valido!" }));
           dispatch(setTokenChecked(false));
         }
