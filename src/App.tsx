@@ -3,6 +3,8 @@ import React, { useEffect } from "react";
 // for in app routing (single page application)
 import {
   BrowserRouter as Router,
+  Redirect,
+  Route,
   //   Redirect,
   //   Route,
   //   Route,
@@ -79,22 +81,6 @@ const App: React.FC = () => {
     setRedirectPath: "/",
   };
 
-  //   const Default = () => {
-  //     return (
-  //       <Router basename="/mailservice">
-  //         <Switch>
-  //           <Route
-  //             {...defaultProtectedRouteProps}
-  //             path="/"
-  //             exact
-  //             component={Login}
-  //           />
-  //           <Redirect to="/" />
-  //         </Switch>
-  //       </Router>
-  //     );
-  //   };
-
   const NoToken = () => {
     return (
       <Modal
@@ -127,6 +113,22 @@ const App: React.FC = () => {
     );
   };
 
+  const Default = () => {
+    return (
+      <Router basename="/mailservice">
+        <Switch>
+          <Route
+            {...defaultProtectedRouteProps}
+            path="/"
+            exact
+            component={NoToken}
+          />
+          <Redirect to="/" />
+        </Switch>
+      </Router>
+    );
+  };
+
   const Dashboard = () => {
     return (
       <AppContainer>
@@ -152,7 +154,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <> {user.error === "" && user.tokenValid ? <Dashboard /> : <NoToken />} </>
+    <> {user.error === "" && user.tokenValid ? <Dashboard /> : <Default />} </>
   );
 };
 
