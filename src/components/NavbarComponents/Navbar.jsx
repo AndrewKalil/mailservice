@@ -42,7 +42,7 @@ export const Navbar = () => {
               }}
             >
               <ProfileText
-                title={true}
+                title={`true`}
               >{`${userDetails.name} ${userDetails.lastName}`}</ProfileText>
               <ProfileText color="#3948FF">{`${userDetails.companyName}`}</ProfileText>
             </div>

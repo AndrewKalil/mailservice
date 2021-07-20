@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import API from "../../services/API";
 import { TokenService } from "../../services/LocalStorage";
 import AWSAPI from "../../services/AWSAPI";
+import { toast } from "react-toastify";
 
 interface ServerValue {
   text: string;
@@ -65,6 +66,11 @@ interface LoadingTypes {
   loadingAreas: boolean;
 }
 
+interface AlertType {
+  isOpen: boolean;
+  content: string;
+}
+
 interface EmailState {
   emails: number;
   emailsList: EmailsListTypes[];
@@ -77,6 +83,7 @@ interface EmailState {
   reglas: Reglas[];
   loading: LoadingTypes;
   logs: LogsType[];
+  alert: AlertType;
 }
 
 const initialState: EmailState = {
@@ -120,6 +127,7 @@ const initialState: EmailState = {
     loadingAreas: false,
   },
   logs: [],
+  alert: { isOpen: false, content: "" },
 };
 
 export const EmailStore = createSlice({
@@ -192,9 +200,16 @@ export const EmailStore = createSlice({
     setFilteredRules: (state, action: PayloadAction<number>) => {
       state.reglas = state.reglas.filter((item) => item.id !== action.payload);
     },
+    setAlert: (state, action: PayloadAction<AlertType>) => {
+      state.alert = action.payload;
+    },
   },
 });
 
+// handles alert changes
+export const handleAlert = (payload: AlertType) => (dispatch: any) => {
+  dispatch(setAlert(payload));
+};
 /*
 This function updates the email count and list:
 setEmailsCount => updates the total count of emails
@@ -311,24 +326,26 @@ export const getServices = (areaID?: string) => (dispatch: any) => {
 This function gets Client information which provides key values to make other API calls
 */
 export const getClientSettings =
-  (username: string) => async (dispatch: any) => {
+  (username: string, cliCod: any) => async (dispatch: any) => {
     try {
       AWSAPI()
         .post(``, {
           operation: "GetClientSettingsByCliCod",
           payload: {
-            cliCod: 1,
+            cliCod: parseInt(cliCod),
           },
         })
         .then((res) => {
-          let clientSettings: ClientSettings = {
-            id: res.data.data.id,
-            apiUrl: res.data.data.apiUrl,
-            mainUsername: res.data.data.mainUsername,
-            active: res.data.data.active,
-            maxInboxLength: res.data.data.maxInboxLength,
-          };
-          dispatch(setClientSettings(clientSettings));
+          if (res.status < 400 && res.data.status !== "Fail") {
+            let clientSettings: ClientSettings = {
+              id: res.data.data.id,
+              apiUrl: res.data.data.apiUrl,
+              mainUsername: res.data.data.mainUsername,
+              active: res.data.data.active,
+              maxInboxLength: res.data.data.maxInboxLength,
+            };
+            dispatch(setClientSettings(clientSettings));
+          }
           // console.log(res.data.data);
         });
     } catch (error) {
@@ -480,7 +497,8 @@ export const createInbox =
           },
         })
         .then((res) => {
-          return res.data;
+          //   console.log(res.data);
+          return res.data.data.successfulConnection;
           //   return true;
         });
       //   console.log(validation.data.successfulConnection);
@@ -492,7 +510,7 @@ export const createInbox =
               clientId: clientID,
               username: newInbox.username,
               password: newInbox.password,
-              server: newInbox.serverType.value.server,
+              server: newInbox.server,
               port: newInbox.port ? 993 : 557,
               serverType: newInbox.serverType.value.text,
             },
@@ -514,9 +532,19 @@ export const createInbox =
                 idToReplace: temporaryInboxId,
               })
             );
+            toast.success("Buzón creado exitosamente.", {
+              bodyStyle: { color: "white" },
+              position: "bottom-left",
+            });
           });
       } else {
-        alert("Credenciales imap incorrectas\nPrueba con otros credenciales");
+        dispatch(
+          setAlert({
+            isOpen: true,
+            content:
+              "Credenciales imap incorrectas. Prueba con otros credenciales",
+          })
+        );
       }
     } catch (error) {
       console.log(error);
@@ -541,6 +569,10 @@ export const deleteInbox =
           if (res.data.data.deleted) {
             dispatch(setEmailsList(newEmailList));
           }
+          toast.warning("Buzón eliminado exitosamente.", {
+            bodyStyle: { color: "white" },
+            position: "bottom-left",
+          });
         });
     } catch (error) {
       console.log(error);
@@ -575,6 +607,10 @@ export const editInbox =
                 idToReplace: emailToEdit.id,
               })
             );
+            toast.success("Buzón guardado exitosamente.", {
+              bodyStyle: { color: "white" },
+              position: "bottom-left",
+            });
           }
         });
     } catch (error) {
@@ -614,6 +650,10 @@ export const saveRule =
             dispatch(setNewRule(tempList));
 
             // console.log(tempList);
+            toast.success("Regla creada con exito.", {
+              bodyStyle: { color: "white" },
+              position: "bottom-left",
+            });
           });
       } catch (error) {
         console.log(error);
@@ -646,6 +686,10 @@ export const saveRule =
               tempList[indexToReplace] = ruleToReplace;
 
               dispatch(setNewRule(tempList));
+              toast.success("Regla guardada con exito.", {
+                bodyStyle: { color: "white" },
+                position: "bottom-left",
+              });
             } else {
               console.log(res.data);
             }
@@ -666,8 +710,12 @@ export const deleteRule = (ruleId: number) => (dispatch: any) => {
       .then((res) => {
         if (res.data.data.deleted) {
           dispatch(setFilteredRules(ruleId));
+          toast.warning("Regla eliminada con exito.", {
+            bodyStyle: { color: "white" },
+            position: "bottom-left",
+          });
         }
-        console.log(res.data);
+        // console.log(res.data);
       });
   } catch (error) {
     console.log(error);
@@ -695,6 +743,7 @@ export const {
   setLogs,
   setNewRule,
   setFilteredRules,
+  setAlert,
 } = EmailStore.actions;
 export const email = (state: RootState) => state.email;
 export default EmailStore.reducer;

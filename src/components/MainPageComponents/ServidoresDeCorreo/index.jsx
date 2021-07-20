@@ -63,7 +63,7 @@ const ServidoresDeCorreo = () => {
           <Scrollbar height="100%">
             <ContentWrapper>
               <h4 style={{ textAlign: "center", textJustify: "center" }}>
-                Estás son los{" "}
+                Estos son los{" "}
                 <span
                   style={{
                     color: "#00B446",

@@ -38,6 +38,7 @@ import {
   deleteInbox,
   editInbox,
   addRuleTempplate,
+  handleAlert,
 } from "../../../store/modules/EmailStore";
 import { useEffect, useRef, useState } from "react";
 import { Regla } from "./regla";
@@ -263,8 +264,9 @@ export const NewEmail = (props) => {
                     clientId: emailState.clientSettings.id,
                     username: editedEmail,
                     password: editablePassword,
-                    port: isSllOn,
+                    port: puerto,
                     serverType: serverType,
+                    server: serverRoute,
                   };
                   dispatch(
                     createInbox(id, newInbox, emailState.clientSettings.id)
@@ -325,6 +327,33 @@ export const NewEmail = (props) => {
               </ContentWrapper>
             </Scrollbar>
           )}
+        </ContentContainer>
+      </Modal>
+      <Modal
+        alert="true"
+        active={emailState.alert.isOpen}
+        // setModalActive={setDeleteModal}
+        height="200px"
+        width="500px"
+      >
+        <ContentContainer spaceBetween>
+          <h4>{emailState.alert.content}</h4>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <ModalButtons
+              bg="#00B446"
+              onClick={() => {
+                dispatch(handleAlert({ isOpen: false, content: "" }));
+              }}
+            >
+              Entendido
+            </ModalButtons>
+          </div>
         </ContentContainer>
       </Modal>
       <OptionsContainer>

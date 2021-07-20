@@ -30,7 +30,7 @@ export const Login = () => {
 
   useEffect(() => {
     if (TokenService.get() !== "") {
-      dispatch(checkToken());
+      //   dispatch(checkToken());
     }
     setLoader(false);
   }, [dispatch]);

@@ -3,8 +3,10 @@ import React, { useEffect } from "react";
 // for in app routing (single page application)
 import {
   BrowserRouter as Router,
-  Route,
-  Redirect,
+  //   Redirect,
+  //   Route,
+  //   Route,
+  //   Redirect,
   Switch,
   //   useParams,
 } from "react-router-dom";
@@ -21,7 +23,6 @@ import { Footer } from "./components/FooterComponents/Footer";
 
 //pages
 import { ServidoresDeCorreo } from "./pages/MainPage";
-import { Login } from "./pages/LoginPage";
 
 // Widgets
 import { Scrollbar } from "./components/widgets/ReactScrollbar";
@@ -30,12 +31,40 @@ import { Scrollbar } from "./components/widgets/ReactScrollbar";
 import PrivateRoute from "./components/Routes/PrivateRoutes";
 
 import { TokenService } from "./services/LocalStorage";
-import { useSelector } from "react-redux";
-import { selectUser } from "./store/modules/AuthStore";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  auth,
+  checkToken,
+  handleAlert,
+  selectUser,
+  setToken,
+} from "./store/modules/AuthStore";
+// import { Login } from "./pages/LoginPage";
+import { getUserDetails } from "./store/modules/UserStore";
+import { Modal } from "./components/widgets/Popup";
+import { ContentContainer } from "./components/MainPageComponents/ServidoresDeCorreo/ServidoresDeCorreoElements";
+import { ModalButtons } from "./components/ReusableStyles";
+
+// function useQuery() {
+//   return new URLSearchParams(useLocation().search);
+// }
 
 const App: React.FC = () => {
+  //   let query = useQuery();
+  //   const token = query.get("token");
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get("token");
+
   // declaring a user which is coming from store
   const user = useSelector(selectUser);
+  const authState = useSelector(auth);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(checkToken(token));
+    dispatch(setToken(token));
+    dispatch(getUserDetails(token));
+  }, [dispatch, token]);
 
   // initialize this variable as false
   let isAuthenticated = false;
@@ -50,21 +79,51 @@ const App: React.FC = () => {
     setRedirectPath: "/",
   };
 
-  useEffect(() => {}, []);
+  //   const Default = () => {
+  //     return (
+  //       <Router basename="/mailservice">
+  //         <Switch>
+  //           <Route
+  //             {...defaultProtectedRouteProps}
+  //             path="/"
+  //             exact
+  //             component={Login}
+  //           />
+  //           <Redirect to="/" />
+  //         </Switch>
+  //       </Router>
+  //     );
+  //   };
 
-  const Default = () => {
+  const NoToken = () => {
     return (
-      <Router basename="/mailservice">
-        <Switch>
-          <Route
-            {...defaultProtectedRouteProps}
-            path="/"
-            exact
-            component={Login}
-          />
-          <Redirect to="/" />
-        </Switch>
-      </Router>
+      <Modal
+        alert="true"
+        active={authState.alert.isOpen}
+        // setModalActive={setDeleteModal}
+        height="200px"
+        width="500px"
+      >
+        <ContentContainer spaceBetween>
+          <h4>{authState.alert.content}</h4>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <ModalButtons
+              bg="#00B446"
+              onClick={() => {
+                dispatch(handleAlert({ isOpen: false, content: "" }));
+              }}
+            >
+              Entendido
+            </ModalButtons>
+          </div>
+        </ContentContainer>
+      </Modal>
     );
   };
 
@@ -93,14 +152,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <>
-      {" "}
-      {user.error === "" && user.token !== "-1" ? (
-        <Dashboard />
-      ) : (
-        <Default />
-      )}{" "}
-    </>
+    <> {user.error === "" && user.tokenValid ? <Dashboard /> : <NoToken />} </>
   );
 };
 

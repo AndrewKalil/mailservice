@@ -4,16 +4,25 @@ import API from "./../../services/API";
 import { TokenService } from "./../../services/LocalStorage";
 import { RootState } from "./../store";
 
+interface AlertType {
+  isOpen: boolean;
+  content: string;
+}
+
 interface IAuth {
   token: string;
   error: string;
   count: number;
+  alert: AlertType;
+  tokenValid: boolean;
 }
 
 const initialState: IAuth = {
   token: "-1",
   error: "",
   count: 0,
+  alert: { isOpen: false, content: "" },
+  tokenValid: false,
 };
 
 export const AuthStore = createSlice({
@@ -35,6 +44,12 @@ export const AuthStore = createSlice({
     resetCounter: (state) => {
       state.count = 0;
     },
+    setAlert: (state, action: PayloadAction<AlertType>) => {
+      state.alert = action.payload;
+    },
+    setTokenChecked: (state, action: PayloadAction<boolean>) => {
+      state.tokenValid = action.payload;
+    },
   },
 });
 
@@ -44,9 +59,15 @@ export const {
   setError,
   increaseCounter,
   resetCounter,
+  setAlert,
+  setTokenChecked,
 } = AuthStore.actions;
 
 export const selectUser = (state: RootState) => state.auth;
+
+export const handleAlert = (payload: AlertType) => (dispatch: any) => {
+  dispatch(setAlert(payload));
+};
 
 export const login = (user: UserLogin) => async (dispatch: any) => {
   try {
@@ -71,17 +92,27 @@ export const login = (user: UserLogin) => async (dispatch: any) => {
   }
 };
 
-export const checkToken = () => async (dispatch: any) => {
+export const setToken = (token: any) => (dispatch: any) => {
+  if (token) {
+    TokenService.set(token);
+    dispatch(loginSuccess(token));
+  } else {
+    dispatch(setAlert({ isOpen: true, content: "Se requiere un token!" }));
+  }
+};
+
+export const checkToken = (token: any) => async (dispatch: any) => {
   try {
     // const res = await api.post('/api/auth/login/', { username, password })
     API()
-      .get(`security/checktoken?token=${TokenService.get()}`)
+      .get(`security/checktoken?token=${token}`)
       .then((response) => {
         let data = response.data;
-        if (data.Status === "Fail") {
-          return dispatch(logoutSuccess());
+        if (data.Status === "Ok") {
+          dispatch(setTokenChecked(true));
         } else {
-          dispatch(loginSuccess(data.Token));
+          dispatch(setAlert({ isOpen: true, content: "Token no valido!" }));
+          dispatch(setTokenChecked(false));
         }
       });
   } catch (e) {
@@ -99,5 +130,7 @@ export const logout = () => async (dispatch: any) => {
     return console.error(e.message);
   }
 };
+
+export const auth = (state: RootState) => state.auth;
 
 export default AuthStore.reducer;

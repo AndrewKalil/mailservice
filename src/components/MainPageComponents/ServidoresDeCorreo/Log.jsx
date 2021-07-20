@@ -12,7 +12,6 @@ export const Log = (props) => {
 
   return (
     <LogContainer>
-      <h6>{type}</h6>
       <h5>{logMessage}</h5>
       <LogBody>
         {/* <Photo>
@@ -38,6 +37,7 @@ export const Log = (props) => {
           </span>
         </LogInfo>
       </LogBody>
+      <span style={{ fontSize: "11px", color: "#FABE32" }}>{type}</span>
     </LogContainer>
   );
 };

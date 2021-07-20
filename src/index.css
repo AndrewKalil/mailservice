@@ -47,3 +47,7 @@ label {
         font-weight: 700;
     }
   }
+
+.notify-body {
+    background-color: #00B446;
+}

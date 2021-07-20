@@ -45,22 +45,22 @@ const PopupWindow = styled.div`
   padding: 13px;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
   z-index: 1000;
-  width: 95%;
+  width: ${(props) => (props.height ? props.width : "95%")};
   height: ${(props) => (props.height ? props.height : "80%")};
   transition: 0.5s ease-in-out;
 
   @media (min-width: 1280px) {
-    width: 65%;
+    width: ${(props) => (props.height ? props.width : "65%")};
     height: ${(props) => (props.height ? props.height : "75%")};
   }
 
   @media (min-width: 1024px) {
-    width: 60%;
+    width: ${(props) => (props.height ? props.width : "60%")};
     height: ${(props) => (props.height ? props.height : "75%")};
   }
 
   @media (min-width: 768px) {
-    width: 75%;
+    width: ${(props) => (props.height ? props.width : "75%")};
     height: ${(props) => (props.height ? props.height : "75%")};
   }
 `;
@@ -81,18 +81,6 @@ const Content = styled.div`
   height: 100%;
 `;
 
-// const CloseButtonFill = styled(IoMdCloseCircle)`
-//   font-size: 25px;
-//   width: 100%;
-//   height: 100%;
-// `;
-
-// const CloseButton = styled(IoMdCloseCircleOutline)`
-//   font-size: 25px;
-//   width: 100%;
-//   height: 100%;
-// `;
-
 const Button = styled.button`
   position: absolute;
   top: 0;
@@ -110,24 +98,28 @@ const Button = styled.button`
 `;
 
 export const Modal = (props) => {
-  const { children, setModalActive, active, height } = props;
+  const { children, setModalActive, active, height, alert, width } = props;
   return (
     <Popup>
       {active && (
         <PopupStyle>
-          <PopupWindow height={height}>
+          <PopupWindow height={height} width={width}>
             <div style={{ position: "relative" }}>
-              <Button
-                onClick={() => {
-                  setModalActive(false);
-                }}
-              >
-                <GrClose />
-              </Button>
+              {!alert && (
+                <Button
+                  onClick={() => {
+                    setModalActive(false);
+                  }}
+                >
+                  <GrClose />
+                </Button>
+              )}
             </div>
             <Content>{children}</Content>
           </PopupWindow>
-          <Background onClick={() => setModalActive(false)}></Background>
+          <Background
+            onClick={() => !alert && setModalActive(false)}
+          ></Background>
         </PopupStyle>
       )}
     </Popup>

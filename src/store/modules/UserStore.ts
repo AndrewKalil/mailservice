@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import API from "../../services/API";
-import { TokenService } from "../../services/LocalStorage";
+// import { TokenService } from "../../services/LocalStorage";
 import { RootState } from "../store";
 
 interface User {
@@ -48,10 +48,10 @@ export const UserStorage = createSlice({
   },
 });
 
-export const getUserDetails = () => async (dispatch: any) => {
+export const getUserDetails = (token: any) => async (dispatch: any) => {
   try {
     await API()
-      .get(`security/GetUserPermisions?token=${TokenService.get()}`)
+      .get(`security/GetUserPermisions?token=${token}`)
       .then((response) => {
         const data: User = {
           username: response.data.Values.UserInfo.Username,
@@ -65,6 +65,7 @@ export const getUserDetails = () => async (dispatch: any) => {
           isVIP: response.data.Values.UserInfo.IsVIP,
           CompanyID: response.data.Values.UserInfo.CompanyID,
         };
+        console.log(response);
         return dispatch(setDetails(data));
       });
   } catch (e) {
