@@ -8,7 +8,7 @@ import {
   ContentWrapper,
   Logs,
 } from "./ServidoresDeCorreoElements";
-import { Button } from "../../ReusableStyles";
+import { Button, ModalButtons } from "../../ReusableStyles";
 
 //widgets
 import { Scrollbar } from "../../widgets/ReactScrollbar";
@@ -25,6 +25,7 @@ import {
   getInboxesByClientId,
   getLogsByClientId,
   addEmailTemplate,
+  handleAlert,
 } from "../../../store/modules/EmailStore";
 import { useEffect, useState } from "react";
 import { user } from "../../../store/modules/UserStore";
@@ -85,6 +86,33 @@ const ServidoresDeCorreo = () => {
           </Scrollbar>
         </ContentContainer>
       </Modal>
+      <Modal
+        alert="true"
+        active={emailState.alert.isOpen}
+        // setModalActive={setDeleteModal}
+        height="200px"
+        width="500px"
+      >
+        <ContentContainer spaceBetween>
+          <h4>{emailState.alert.content}</h4>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <ModalButtons
+              bg="#00B446"
+              onClick={() => {
+                dispatch(handleAlert({ isOpen: false, content: "" }));
+              }}
+            >
+              Entendido
+            </ModalButtons>
+          </div>
+        </ContentContainer>
+      </Modal>
       <LogsBtn absolute="true" to="#" onClick={() => setOpenModal(!openModal)}>
         Ver Logs
       </LogsBtn>
@@ -111,8 +139,11 @@ const ServidoresDeCorreo = () => {
               ) {
                 dispatch(addEmailTemplate());
               } else {
-                alert(
-                  `Ha llegado al limite de buzones creados: ${emailState.clientSettings.maxInboxLength}`
+                dispatch(
+                  handleAlert({
+                    isOpen: true,
+                    content: `Ha llegado al limite de buzones creados: ${emailState.clientSettings.maxInboxLength}`,
+                  })
                 );
               }
             }}

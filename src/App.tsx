@@ -56,6 +56,7 @@ const App: React.FC = () => {
   //   const token = query.get("token");
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get("token");
+  //   const cliCod = urlParams.get("cliCod");
 
   // declaring a user which is coming from store
   const user = useSelector(selectUser);
@@ -139,7 +140,8 @@ const App: React.FC = () => {
               <Switch>
                 <PrivateRoute
                   {...defaultProtectedRouteProps}
-                  path="/"
+                  path={`/`}
+                  //   path="/"
                   exact
                   component={ServidoresDeCorreo}
                 />
