@@ -1,6 +1,6 @@
 import { Environment } from "../interfaces/Environment";
 
-function getBaseEnv(baseApi: string): Environment {
+function getBaseEnv(baseApi: string, awsBaseApi: string): Environment {
   return {
     intervals: {
       logout: 36000,
@@ -8,7 +8,8 @@ function getBaseEnv(baseApi: string): Environment {
     },
     api: {
       url: `${baseApi}/api`,
-      awsApi: `https://1r1nz0pxl4.execute-api.us-east-1.amazonaws.com/default/restServicesMailService`,
+      awsApi: `${awsBaseApi}`,
+      //   awsApi: `https://1r1nz0pxl4.execute-api.us-east-1.amazonaws.com/default/restServicesMailService`,
     },
     isProduction: true,
     isDevelopment: false,

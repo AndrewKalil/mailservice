@@ -1,8 +1,16 @@
 import environment from "./base";
 import { Environment } from "../interfaces/Environment";
 
-const baseApi = "https://monquick.helppeoplecloud.com/helppeopleapi";
-const env = environment(baseApi);
+// const baseApi = "https://monquick.helppeoplecloud.com/helppeopleapi";
+const baseApi = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL
+  : "https://monquick.helppeoplecloud.com/helppeopleapi";
+// const awsBaseApi =
+//   "https://1r1nz0pxl4.execute-api.us-east-1.amazonaws.com/default/restServicesMailService";
+const awsBaseApi = process.env.REACT_APP_AWS_API
+  ? process.env.REACT_APP_AWS_API
+  : "https://1r1nz0pxl4.execute-api.us-east-1.amazonaws.com/default/restServicesMailService";
+const env = environment(baseApi, awsBaseApi);
 
 const Config: Environment = {
   ...env,

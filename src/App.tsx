@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 // for in app routing (single page application)
 import {
   BrowserRouter as Router,
+  HashRouter,
   Redirect,
   Route,
   //   Redirect,
@@ -133,7 +134,7 @@ const App: React.FC = () => {
   const Dashboard = () => {
     return (
       <AppContainer>
-        <Router basename="/mailservice">
+        <HashRouter basename="/mailservice" hashType="noslash">
           <Navbar />
           <AppInnerContainer>
             <Scrollbar height="100%">
@@ -150,7 +151,7 @@ const App: React.FC = () => {
             </Scrollbar>
           </AppInnerContainer>
           <Footer />
-        </Router>
+        </HashRouter>
       </AppContainer>
     );
   };
