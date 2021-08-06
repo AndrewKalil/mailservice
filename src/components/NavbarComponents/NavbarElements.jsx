@@ -9,6 +9,11 @@ export const NavbarContainer = styled.nav`
   top: 0;
   z-index: 1;
   height: 8vh;
+
+  @media (min-width: 1024px) {
+    /* width: 80%; */
+    height: 52px;
+  }
 `;
 
 export const NavbarStyle = styled.div`
@@ -58,7 +63,7 @@ export const NavLogo = styled(NavLink)`
   }
 
   @media (min-width: 1536px) {
-    width: 40%;
+    width: 135px;
   }
 `;
 

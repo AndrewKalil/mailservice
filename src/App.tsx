@@ -57,7 +57,9 @@ const App: React.FC = () => {
   //   const token = query.get("token");
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get("token");
-  //   const cliCod = urlParams.get("cliCod");
+  const cliCod = urlParams.get("cliCod");
+
+  //   console.log(token);
 
   // declaring a user which is coming from store
   const user = useSelector(selectUser);
@@ -134,7 +136,7 @@ const App: React.FC = () => {
   const Dashboard = () => {
     return (
       <AppContainer>
-        <HashRouter basename="/mailservice" hashType="noslash">
+        <HashRouter basename="/mailservice">
           <Navbar />
           <AppInnerContainer>
             <Scrollbar height="100%">
@@ -144,8 +146,10 @@ const App: React.FC = () => {
                   path={`/`}
                   //   path="/"
                   exact
-                  component={ServidoresDeCorreo}
-                />
+                  //   component={}
+                >
+                  <ServidoresDeCorreo cliCod={cliCod} />
+                </PrivateRoute>
                 {/* <Route component={NotFoundPage} /> */}
               </Switch>
             </Scrollbar>
